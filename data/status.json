@@ -1,25 +1,24 @@
 {
-  "target": "https://joken.jp/api/health",
-  "updated_at": "2026-11-13T18:43:48.770Z",
+  "target": "https://dash.joken.jp/api/health",
+  "updated_at": "2026-11-13T18:46:40.124Z",
   "current": {
-    "status": "down",
-    "http_status": null,
-    "latency_ms": 159,
+    "status": "operational",
+    "http_status": 200,
+    "latency_ms": 668,
     "services": {
       "web": {
-        "status": "down",
-        "latency_ms": null
+        "status": "operational",
+        "latency_ms": 668
       },
       "d1": {
-        "status": "unknown",
-        "latency_ms": null
+        "status": "operational",
+        "latency_ms": 200
       },
       "r2": {
-        "status": "unknown",
-        "latency_ms": null
+        "status": "operational",
+        "latency_ms": 0
       }
-    },
-    "error": "fetch failed"
+    }
   },
   "history": [
     {
@@ -31,6 +30,11 @@
       "checked_at": "2026-11-13T18:43:48.770Z",
       "status": "down",
       "latency_ms": 159
+    },
+    {
+      "checked_at": "2026-11-13T18:46:40.124Z",
+      "status": "operational",
+      "latency_ms": 668
     }
   ]
 }
