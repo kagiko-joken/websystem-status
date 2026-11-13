@@ -215,7 +215,7 @@
       </div>
       <div class="actions">
         <button type="button" id="live-check-btn" class="btn">今すぐライブ確認</button>
-        <a href="https://joken.jp" class="btn" target="_blank" rel="noopener">joken.jp へ</a>
+        <a href="https://dash.joken.jp" class="btn" target="_blank" rel="noopener">dash.joken.jp へ</a>
       </div>
     </header>
 
@@ -383,7 +383,7 @@
       btn.textContent = '確認中…';
       const start = performance.now();
       try {
-        const res = await fetch('https://joken.jp/api/health', { cache: 'no-store' });
+        const res = await fetch('https://dash.joken.jp/api/health', { cache: 'no-store' });
         const totalMs = Math.round(performance.now() - start);
         const data = await res.json();
         if (data?.services?.web) {

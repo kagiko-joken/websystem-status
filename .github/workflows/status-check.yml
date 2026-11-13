@@ -31,7 +31,7 @@ jobs:
           node -e '
             const fs = require("fs");
             const path = "data/status.json";
-            const target = process.env.STATUS_URL || "https://joken.jp/api/health";
+            const target = process.env.STATUS_URL || "https://dash.joken.jp/api/health";
 
             (async () => {
               let data = { target, updated_at: null, current: {}, history: [] };
