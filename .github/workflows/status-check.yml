@@ -1,0 +1,117 @@
+name: Status Check & Deploy Pages
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: status-pages
+  cancel-in-progress: true
+
+jobs:
+  check-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check target health
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = "data/status.json";
+            const target = process.env.STATUS_URL || "https://joken.jp/api/health";
+
+            (async () => {
+              let data = { target, updated_at: null, current: {}, history: [] };
+              try {
+                data = JSON.parse(fs.readFileSync(path, "utf8"));
+              } catch {}
+
+              const checkedAt = new Date().toISOString();
+              const start = Date.now();
+              let current = {
+                status: "down",
+                http_status: null,
+                latency_ms: null,
+                services: {
+                  web: { status: "down", latency_ms: null },
+                  d1: { status: "unknown", latency_ms: null },
+                  r2: { status: "unknown", latency_ms: null }
+                }
+              };
+
+              try {
+                const res = await fetch(target, { signal: AbortSignal.timeout(10000) });
+                const latency = Date.now() - start;
+                const body = await res.json().catch(() => null);
+                if (body && body.services) {
+                  body.services.web = {
+                    status: res.ok ? "operational" : "degraded",
+                    latency_ms: latency
+                  };
+                  current = {
+                    status: body.status || (res.ok ? "operational" : "down"),
+                    http_status: res.status,
+                    latency_ms: latency,
+                    services: body.services
+                  };
+                } else {
+                  current.status = res.ok ? "operational" : "down";
+                  current.http_status = res.status;
+                  current.latency_ms = latency;
+                  current.services.web = { status: current.status, latency_ms: latency };
+                }
+              } catch (err) {
+                current.latency_ms = Date.now() - start;
+                current.error = err.message;
+              }
+
+              const history = Array.isArray(data.history) ? data.history : [];
+              history.push({
+                checked_at: checkedAt,
+                status: current.status,
+                latency_ms: current.latency_ms
+              });
+
+              const next = {
+                target,
+                updated_at: checkedAt,
+                current,
+                history: history.slice(-288)
+              };
+
+              fs.writeFileSync(path, JSON.stringify(next, null, 2) + "\n");
+            })();
+          '
+
+      - name: Commit updated status.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/status.json
+          git diff --staged --quiet || git commit -m "Update status.json [skip ci]"
+          git push
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

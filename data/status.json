@@ -1,0 +1,15 @@
+{
+  "target": "https://joken.jp/api/health",
+  "updated_at": null,
+  "current": {
+    "status": "unknown",
+    "http_status": null,
+    "latency_ms": null,
+    "services": {
+      "web": { "status": "unknown", "latency_ms": null },
+      "d1": { "status": "unknown", "latency_ms": null },
+      "r2": { "status": "unknown", "latency_ms": null }
+    }
+  },
+  "history": []
+}
