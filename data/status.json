@@ -1,18 +1,18 @@
 {
   "target": "https://dash.joken.jp/api/health",
-  "updated_at": "2026-11-13T18:53:09.478Z",
+  "updated_at": "2026-11-13T23:39:01.248Z",
   "current": {
     "status": "operational",
     "http_status": 200,
-    "latency_ms": 598,
+    "latency_ms": 647,
     "services": {
       "web": {
         "status": "operational",
-        "latency_ms": 598
+        "latency_ms": 647
       },
       "d1": {
         "status": "operational",
-        "latency_ms": 179
+        "latency_ms": 157
       },
       "r2": {
         "status": "operational",
@@ -41,8 +41,8 @@
     },
     "resend": {
       "name": "Resend",
-      "status": "degraded",
-      "description": "Partial System Degradation",
+      "status": "operational",
+      "description": "All Systems Operational",
       "url": "https://resend-status.com/"
     }
   },
@@ -66,6 +66,11 @@
       "checked_at": "2026-11-13T18:53:09.478Z",
       "status": "operational",
       "latency_ms": 598
+    },
+    {
+      "checked_at": "2026-11-13T23:39:01.248Z",
+      "status": "operational",
+      "latency_ms": 647
     }
   ]
 }
