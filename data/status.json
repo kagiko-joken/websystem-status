@@ -1,23 +1,49 @@
 {
   "target": "https://dash.joken.jp/api/health",
-  "updated_at": "2026-11-13T18:46:40.124Z",
+  "updated_at": "2026-11-13T18:53:09.478Z",
   "current": {
     "status": "operational",
     "http_status": 200,
-    "latency_ms": 668,
+    "latency_ms": 598,
     "services": {
       "web": {
         "status": "operational",
-        "latency_ms": 668
+        "latency_ms": 598
       },
       "d1": {
         "status": "operational",
-        "latency_ms": 200
+        "latency_ms": 179
       },
       "r2": {
         "status": "operational",
         "latency_ms": 0
       }
+    }
+  },
+  "external": {
+    "cloudflare": {
+      "name": "Cloudflare",
+      "status": "degraded",
+      "description": "Partially Degraded Service",
+      "url": "https://www.cloudflarestatus.com/"
+    },
+    "google_workspace": {
+      "name": "Google Workspace",
+      "status": "operational",
+      "description": "All Systems Operational",
+      "url": "https://www.google.com/appsstatus/dashboard/"
+    },
+    "github": {
+      "name": "GitHub",
+      "status": "operational",
+      "description": "All Systems Operational",
+      "url": "https://www.githubstatus.com/"
+    },
+    "resend": {
+      "name": "Resend",
+      "status": "degraded",
+      "description": "Partial System Degradation",
+      "url": "https://resend-status.com/"
     }
   },
   "history": [
@@ -35,6 +61,11 @@
       "checked_at": "2026-11-13T18:46:40.124Z",
       "status": "operational",
       "latency_ms": 668
+    },
+    {
+      "checked_at": "2026-11-13T18:53:09.478Z",
+      "status": "operational",
+      "latency_ms": 598
     }
   ]
 }
