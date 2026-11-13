@@ -1,15 +1,31 @@
 {
   "target": "https://joken.jp/api/health",
-  "updated_at": null,
+  "updated_at": "2026-11-13T18:12:21.277Z",
   "current": {
-    "status": "unknown",
+    "status": "down",
     "http_status": null,
-    "latency_ms": null,
+    "latency_ms": 133,
     "services": {
-      "web": { "status": "unknown", "latency_ms": null },
-      "d1": { "status": "unknown", "latency_ms": null },
-      "r2": { "status": "unknown", "latency_ms": null }
-    }
+      "web": {
+        "status": "down",
+        "latency_ms": null
+      },
+      "d1": {
+        "status": "unknown",
+        "latency_ms": null
+      },
+      "r2": {
+        "status": "unknown",
+        "latency_ms": null
+      }
+    },
+    "error": "fetch failed"
   },
-  "history": []
+  "history": [
+    {
+      "checked_at": "2026-11-13T18:12:21.277Z",
+      "status": "down",
+      "latency_ms": 133
+    }
+  ]
 }
