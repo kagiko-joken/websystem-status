@@ -85,10 +85,49 @@ jobs:
                 latency_ms: current.latency_ms
               });
 
+              async function checkStatuspage(url, pageUrl, name) {
+                try {
+                  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                  if (!r.ok) return { name, status: "unknown", description: `HTTP ${r.status}`, url: pageUrl };
+                  const j = await r.json();
+                  const ind = j?.status?.indicator || "none";
+                  const mapped = ind === "none" ? "operational" : (ind === "critical" || ind === "major" ? "down" : "degraded");
+                  return { name, status: mapped, description: j?.status?.description || "", url: pageUrl };
+                } catch {
+                  return { name, status: "unknown", description: "取得失敗", url: pageUrl };
+                }
+              }
+
+              async function checkGoogleWorkspace() {
+                const pageUrl = "https://www.google.com/appsstatus/dashboard/";
+                try {
+                  const r = await fetch("https://www.google.com/appsstatus/dashboard/incidents.json", { signal: AbortSignal.timeout(8000) });
+                  if (!r.ok) return { name: "Google Workspace", status: "unknown", description: `HTTP ${r.status}`, url: pageUrl };
+                  const incidents = await r.json();
+                  const active = Array.isArray(incidents) ? incidents.filter(i => !i.end) : [];
+                  return {
+                    name: "Google Workspace",
+                    status: active.length > 0 ? "degraded" : "operational",
+                    description: active.length > 0 ? `進行中の障害: ${active.length}件` : "All Systems Operational",
+                    url: pageUrl
+                  };
+                } catch {
+                  return { name: "Google Workspace", status: "unknown", description: "取得失敗", url: pageUrl };
+                }
+              }
+
+              const external = {
+                cloudflare: await checkStatuspage("https://www.cloudflarestatus.com/api/v2/status.json", "https://www.cloudflarestatus.com/", "Cloudflare"),
+                google_workspace: await checkGoogleWorkspace(),
+                github: await checkStatuspage("https://www.githubstatus.com/api/v2/status.json", "https://www.githubstatus.com/", "GitHub"),
+                resend: await checkStatuspage("https://resend-status.com/api/v2/status.json", "https://resend-status.com/", "Resend")
+              };
+
               const next = {
                 target,
                 updated_at: checkedAt,
                 current,
+                external,
                 history: history.slice(-288)
               };
 

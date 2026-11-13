@@ -268,6 +268,55 @@
 
     <section class="card">
       <h2 class="card-title">
+        <span>外部依存サービス（上流インフラ）</span>
+        <span class="latency">公式ステータス連携</span>
+      </h2>
+      <div class="service-list" id="external-service-list">
+        <div class="service-row">
+          <div>
+            <div class="service-name">Cloudflare</div>
+            <div class="service-desc" id="ext-desc-cloudflare">Pages / Workers / D1 / R2 / DNS</div>
+          </div>
+          <div class="service-right">
+            <a href="https://www.cloudflarestatus.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <span class="pill" id="ext-pill-cloudflare">確認中</span>
+          </div>
+        </div>
+        <div class="service-row">
+          <div>
+            <div class="service-name">Google Workspace</div>
+            <div class="service-desc" id="ext-desc-google_workspace">カレンダー連携 / GAS</div>
+          </div>
+          <div class="service-right">
+            <a href="https://www.google.com/appsstatus/dashboard/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <span class="pill" id="ext-pill-google_workspace">確認中</span>
+          </div>
+        </div>
+        <div class="service-row">
+          <div>
+            <div class="service-name">GitHub</div>
+            <div class="service-desc" id="ext-desc-github">コード管理 / Pages / Actions</div>
+          </div>
+          <div class="service-right">
+            <a href="https://www.githubstatus.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <span class="pill" id="ext-pill-github">確認中</span>
+          </div>
+        </div>
+        <div class="service-row">
+          <div>
+            <div class="service-name">Resend</div>
+            <div class="service-desc" id="ext-desc-resend">招待メール送信API</div>
+          </div>
+          <div class="service-right">
+            <a href="https://resend-status.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <span class="pill" id="ext-pill-resend">確認中</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">
         <span>直近の稼働履歴（5分間隔）</span>
         <span id="uptime-rate" class="latency">稼働率: -</span>
       </h2>
@@ -365,12 +414,30 @@
       });
     }
 
+    function renderExternal(external) {
+      if (!external) return;
+      ['cloudflare', 'google_workspace', 'github', 'resend'].forEach(key => {
+        const item = external[key];
+        if (!item) return;
+        const pill = document.getElementById('ext-pill-' + key);
+        const desc = document.getElementById('ext-desc-' + key);
+        if (pill) {
+          applyStatusClass(pill, item.status || 'unknown');
+          pill.textContent = STATUS_LABELS[item.status] || '未確認';
+        }
+        if (desc && item.description) {
+          desc.textContent = item.description;
+        }
+      });
+    }
+
     async function loadStaticStatus() {
       try {
         const res = await fetch('./data/status.json?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error('status.json fetch failed');
         const data = await res.json();
         renderCurrent(data.current, data.updated_at, 'GitHub Actions 監視');
+        renderExternal(data.external);
         renderHistory(data.history);
       } catch {
         renderCurrent({ status: 'unknown' }, null, '監視データ取得エラー');
