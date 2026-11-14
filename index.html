@@ -227,6 +227,13 @@
       <div id="overall-meta" class="banner-meta">-</div>
     </div>
 
+    <div id="incident-guide" class="card" style="display:none; border-left:4px solid var(--warn);">
+      <h2 class="card-title" style="margin-bottom:0.4rem;">
+        <span id="incident-guide-title">状況の説明</span>
+      </h2>
+      <p id="incident-guide-body" style="margin:0; font-size:0.88rem; color:var(--text);"></p>
+    </div>
+
     <section class="card">
       <h2 class="card-title">
         <span>コンポーネント別ステータス</span>
@@ -315,21 +322,10 @@
       </div>
     </section>
 
-    <section class="card">
-      <h2 class="card-title">
-        <span>直近の稼働履歴（5分間隔）</span>
-        <span id="uptime-rate" class="latency">稼働率: -</span>
-      </h2>
-      <div id="uptime-bars" class="uptime-bars" aria-label="稼働履歴バー"></div>
-      <div class="uptime-footer">
-        <span id="history-oldest">-</span>
-        <span>最新</span>
-      </div>
-    </section>
-
     <footer>
-      <div>© 2026 静岡県立科学技術高等学校 情報処理研究部</div>
-      <div style="margin-top:0.25rem;">Hosted independently on GitHub Pages · Monitored by GitHub Actions</div>
+      <div>※本システムは Cloudflare 上で稼働しているため、繋がらない場合は Cloudflare 側の障害である可能性が高いです。</div>
+      <div style="margin-top:0.35rem;">© 2026 静岡県立科学技術高等学校 情報処理研究部</div>
+      <div style="margin-top:0.2rem;">Hosted independently on GitHub Pages · Monitored by GitHub Actions</div>
     </footer>
   </div>
 
@@ -362,7 +358,84 @@
       }
     }
 
+    let latestCurrent = null;
+    let latestExternal = null;
+
+    function updateIncidentGuide() {
+      const guide = document.getElementById('incident-guide');
+      const titleEl = document.getElementById('incident-guide-title');
+      const bodyEl = document.getElementById('incident-guide-body');
+      if (!guide || !titleEl || !bodyEl) return;
+
+      const cur = latestCurrent || {};
+      const ext = latestExternal || {};
+      const svcs = cur.services || {};
+      const cfDown = ext.cloudflare && ext.cloudflare.status && ext.cloudflare.status !== 'operational' && ext.cloudflare.status !== 'unknown';
+
+      const issues = [];
+      if (cur.status === 'down' || svcs.web?.status === 'down') {
+        issues.push({
+          level: 'down',
+          title: cfDown ? 'Cloudflare 側で障害が発生している可能性が高いです' : 'ポータル本体（dash.joken.jp）に接続できません',
+          body: cfDown
+            ? '部活ポータルが利用している Cloudflare インフラ側で障害が検知されています。サイトへのアクセスやログインが利用できない状態です。Cloudflare の復旧までしばらくお待ちください。'
+            : 'Webサーバー（Cloudflare Pages）から応答がありません。Cloudflare 側の障害、またはメンテナンス中の可能性があります。下の「Cloudflare 公式」もあわせてご確認ください。'
+        });
+      } else if (svcs.d1?.status === 'down' && svcs.r2?.status === 'down') {
+        issues.push({
+          level: 'down',
+          title: 'データベース（D1）とストレージ（R2）で障害が発生しています',
+          body: 'Cloudflare 側のデータベース・ストレージ障害により、ログイン・記事の閲覧や投稿・画像の表示が利用できない状態です。復旧までお待ちください。'
+        });
+      } else if (svcs.d1?.status === 'down') {
+        issues.push({
+          level: 'down',
+          title: 'データベース（Cloudflare D1）に接続できません',
+          body: 'ログイン・ナレッジ記事・カレンダー・部員データの読み書きが停止しています。Cloudflare D1 側の障害の可能性が高いです。'
+        });
+      } else if (svcs.r2?.status === 'down') {
+        issues.push({
+          level: 'degraded',
+          title: '画像ストレージ（Cloudflare R2）で障害が発生しています',
+          body: 'サイトへのログインや文字の閲覧は可能ですが、記事内の画像表示や新しい画像のアップロードができない状態です。'
+        });
+      } else if (cfDown) {
+        issues.push({
+          level: 'degraded',
+          title: 'Cloudflare 側で一部障害・遅延が報告されています',
+          body: '現在ポータル自体は応答していますが、Cloudflare 側の障害により一部で読み込みが遅くなったり繋がりにくくなる場合があります。'
+        });
+      }
+
+      const extNotes = [];
+      if (ext.google_workspace?.status && ext.google_workspace.status !== 'operational' && ext.google_workspace.status !== 'unknown') {
+        extNotes.push('Google Workspace（カレンダー自動同期に影響が出る場合があります）');
+      }
+      if (ext.resend?.status && ext.resend.status !== 'operational' && ext.resend.status !== 'unknown') {
+        extNotes.push('Resend（部員招待メールの送信に影響が出る場合があります）');
+      }
+      if (ext.github?.status && ext.github.status !== 'operational' && ext.github.status !== 'unknown') {
+        extNotes.push('GitHub（ステータス更新・デプロイに影響が出る場合があります）');
+      }
+
+      if (issues.length > 0) {
+        const top = issues[0];
+        guide.style.display = 'block';
+        guide.style.borderLeftColor = top.level === 'down' ? 'var(--down)' : 'var(--warn)';
+        titleEl.textContent = top.title;
+        bodyEl.textContent = top.body + (extNotes.length ? `（※併せて ${extNotes.join(' / ')} でも異常が報告されています）` : '');
+      } else if (extNotes.length > 0) {
+        guide.style.display = 'block';
+        guide.style.borderLeftColor = 'var(--warn)';
+        titleEl.textContent = '一部の外部連携サービスで異常が検知されています';
+        bodyEl.textContent = `ポータル本体は稼働中ですが、以下の外部サービスで障害が発生しています: ${extNotes.join(' / ')}`;
+      } else {
+        guide.style.display = 'none';
+      }
+    }
+
     function renderCurrent(current, updatedAt, sourceLabel) {
+      latestCurrent = current;
       const status = current?.status || 'unknown';
       const banner = document.getElementById('overall-banner');
       applyStatusClass(banner, status);
@@ -380,42 +453,11 @@
         pill.textContent = STATUS_LABELS[st] || '未確認';
         lat.textContent = typeof svc.latency_ms === 'number' ? `${svc.latency_ms} ms` : '-';
       });
-    }
-
-    function renderHistory(history) {
-      const barsEl = document.getElementById('uptime-bars');
-      const rateEl = document.getElementById('uptime-rate');
-      const oldestEl = document.getElementById('history-oldest');
-      const list = Array.isArray(history) ? history.slice(-60) : [];
-
-      if (list.length === 0) {
-        barsEl.innerHTML = '';
-        for (let i = 0; i < 40; i++) {
-          const div = document.createElement('div');
-          div.className = 'uptime-bar';
-          barsEl.appendChild(div);
-        }
-        rateEl.textContent = '稼働率: -';
-        oldestEl.textContent = '履歴データなし';
-        return;
-      }
-
-      const okCount = list.filter(item => item.status === 'operational').length;
-      const rate = ((okCount / list.length) * 100).toFixed(1);
-      rateEl.textContent = `稼働率: ${rate}% (${okCount}/${list.length})`;
-      oldestEl.textContent = formatJst(list[0].checked_at);
-
-      barsEl.innerHTML = '';
-      list.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'uptime-bar' + (item.status ? ` is-${item.status}` : '');
-        const lat = typeof item.latency_ms === 'number' ? ` (${item.latency_ms}ms)` : '';
-        div.title = `${formatJst(item.checked_at)} - ${STATUS_LABELS[item.status] || '不明'}${lat}`;
-        barsEl.appendChild(div);
-      });
+      updateIncidentGuide();
     }
 
     function renderExternal(external) {
+      latestExternal = external || null;
       if (!external) return;
       ['cloudflare', 'google_workspace', 'github', 'resend'].forEach(key => {
         const item = external[key];
@@ -430,6 +472,7 @@
           desc.textContent = item.description;
         }
       });
+      updateIncidentGuide();
     }
 
     async function loadStaticStatus() {
@@ -439,7 +482,6 @@
         const data = await res.json();
         renderCurrent(data.current, data.updated_at, 'GitHub Actions 監視');
         renderExternal(data.external);
-        renderHistory(data.history);
       } catch {
         renderCurrent({ status: 'unknown' }, null, '監視データ取得エラー');
       }
