@@ -214,7 +214,7 @@
         </div>
       </div>
       <div class="actions">
-        <button type="button" id="live-check-btn" class="btn">今すぐライブ確認</button>
+        <button type="button" id="live-check-btn" class="btn">更新</button>
         <a href="https://dash.joken.jp" class="btn" target="_blank" rel="noopener">dash.joken.jp へ</a>
       </div>
     </header>
@@ -447,7 +447,7 @@
     async function runLiveCheck() {
       const btn = document.getElementById('live-check-btn');
       btn.disabled = true;
-      btn.textContent = '確認中…';
+      btn.textContent = '更新中…';
       const start = performance.now();
       try {
         const res = await fetch('https://dash.joken.jp/api/health', { cache: 'no-store' });
@@ -468,12 +468,12 @@
         }, new Date().toISOString(), 'ブラウザ直接ライブ確認');
       } finally {
         btn.disabled = false;
-        btn.textContent = '今すぐライブ確認';
+        btn.textContent = '更新';
       }
     }
 
     document.getElementById('live-check-btn').addEventListener('click', runLiveCheck);
-    loadStaticStatus();
+    loadStaticStatus().then(() => runLiveCheck());
   </script>
 </body>
 </html>
