@@ -14,7 +14,7 @@
     } catch {}
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
     :root {
       color-scheme: light dark;
       --bg: #f9fafb;
@@ -98,7 +98,7 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+      font-family: "Zen Kaku Gothic New", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.65;
@@ -108,9 +108,9 @@
       border-bottom: 1px solid var(--border);
     }
     .top-bar__inner {
-      max-width: 860px;
+      max-width: 896px;
       margin: 0 auto;
-      padding: 0.9rem 1.25rem;
+      padding: 1rem 1.5rem;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -118,9 +118,9 @@
       gap: 0.75rem;
     }
     .container {
-      max-width: 860px;
+      max-width: 896px;
       margin: 0 auto;
-      padding: 1.5rem 1.25rem 3.5rem;
+      padding: 1.5rem 1.5rem 3.5rem;
     }
     .brand {
       display: flex;
@@ -147,9 +147,10 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.45rem 0.9rem;
-      font-size: 0.82rem;
-      font-weight: 600;
+      min-height: 40px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 700;
       border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--surface);
@@ -174,11 +175,11 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.75rem;
-      padding: 1.1rem 1.35rem;
+      padding: 1rem 1.5rem;
       border-radius: 8px;
       background: var(--unknown-bg);
       border: 1px solid var(--border);
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
     }
     .banner.is-operational { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok); }
     .banner.is-degraded { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn); }
@@ -208,8 +209,8 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1.2rem 1.35rem;
-      margin-bottom: 1.25rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
       box-shadow: var(--card-shadow);
     }
     .card-title {
@@ -233,7 +234,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      padding: 0.72rem 0.95rem;
+      padding: 0.75rem 1rem;
       border: 1px solid var(--border);
       border-radius: 6px;
       background: var(--surface-subtle);
@@ -370,7 +371,7 @@
             <div class="service-desc" id="ext-desc-cloudflare">Pages / Workers / D1 / R2 / DNS</div>
           </div>
           <div class="service-right">
-            <a href="https://www.cloudflarestatus.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <a href="https://www.cloudflarestatus.com/" target="_blank" rel="noopener" class="btn" style="min-height: 32px; padding:0.25rem 0.75rem; font-size:0.75rem;">公式 ↗</a>
             <span class="pill" id="ext-pill-cloudflare">確認中</span>
           </div>
         </div>
@@ -380,7 +381,7 @@
             <div class="service-desc" id="ext-desc-google_workspace">カレンダー連携 / GAS</div>
           </div>
           <div class="service-right">
-            <a href="https://www.google.com/appsstatus/dashboard/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <a href="https://www.google.com/appsstatus/dashboard/" target="_blank" rel="noopener" class="btn" style="min-height: 32px; padding:0.25rem 0.75rem; font-size:0.75rem;">公式 ↗</a>
             <span class="pill" id="ext-pill-google_workspace">確認中</span>
           </div>
         </div>
@@ -390,7 +391,7 @@
             <div class="service-desc" id="ext-desc-github">コード管理 / Pages / Actions / status</div>
           </div>
           <div class="service-right">
-            <a href="https://www.githubstatus.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <a href="https://www.githubstatus.com/" target="_blank" rel="noopener" class="btn" style="min-height: 32px; padding:0.25rem 0.75rem; font-size:0.75rem;">公式 ↗</a>
             <span class="pill" id="ext-pill-github">確認中</span>
           </div>
         </div>
@@ -400,7 +401,7 @@
             <div class="service-desc" id="ext-desc-resend">招待メール送信API</div>
           </div>
           <div class="service-right">
-            <a href="https://resend-status.com/" target="_blank" rel="noopener" class="btn" style="padding:0.25rem 0.55rem; font-size:0.74rem;">公式 ↗</a>
+            <a href="https://resend-status.com/" target="_blank" rel="noopener" class="btn" style="min-height: 32px; padding:0.25rem 0.75rem; font-size:0.75rem;">公式 ↗</a>
             <span class="pill" id="ext-pill-resend">確認中</span>
           </div>
         </div>
