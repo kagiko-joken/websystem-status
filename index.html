@@ -533,12 +533,12 @@
       if (issues.length > 0) {
         const top = issues[0];
         guide.style.display = 'block';
-        guide.style.borderLeftColor = top.level === 'down' ? 'var(--down)' : 'var(--warn)';
+        guide.style.borderColor = top.level === 'down' ? 'var(--down-border)' : 'var(--warn-border)';
         titleEl.textContent = top.title;
         bodyEl.textContent = top.body + (extNotes.length ? `（※併せて ${extNotes.join(' / ')} でも異常が報告されています）` : '');
       } else if (extNotes.length > 0) {
         guide.style.display = 'block';
-        guide.style.borderLeftColor = 'var(--warn)';
+        guide.style.borderColor = 'var(--warn-border)';
         titleEl.textContent = '一部の外部連携サービスで異常が検知されています';
         bodyEl.textContent = `ポータル本体は稼働中ですが、以下の外部サービスで障害が発生しています: ${extNotes.join(' / ')}`;
       } else {
