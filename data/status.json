@@ -1,22 +1,22 @@
 {
   "target": "https://dash.joken.jp/api/health",
-  "updated_at": "2026-11-24T06:22:34.301Z",
+  "updated_at": "2026-11-24T18:04:24.692Z",
   "current": {
     "status": "operational",
     "http_status": 200,
-    "latency_ms": 1321,
+    "latency_ms": 1348,
     "services": {
       "web": {
         "status": "operational",
-        "latency_ms": 1321
+        "latency_ms": 1348
       },
       "d1": {
         "status": "operational",
-        "latency_ms": 224
+        "latency_ms": 136
       },
       "r2": {
         "status": "operational",
-        "latency_ms": 260
+        "latency_ms": 375
       }
     }
   },
@@ -24,7 +24,7 @@
     "cloudflare": {
       "name": "Cloudflare",
       "status": "degraded",
-      "description": "Partially Degraded Service",
+      "description": "Minor Service Outage",
       "url": "https://www.cloudflarestatus.com/"
     },
     "google_workspace": {
@@ -306,6 +306,11 @@
       "checked_at": "2026-11-24T06:22:34.301Z",
       "status": "operational",
       "latency_ms": 1321
+    },
+    {
+      "checked_at": "2026-11-24T18:04:24.692Z",
+      "status": "operational",
+      "latency_ms": 1348
     }
   ]
 }
