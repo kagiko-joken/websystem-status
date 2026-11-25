@@ -1,22 +1,22 @@
 {
   "target": "https://dash.joken.jp/api/health",
-  "updated_at": "2026-11-25T11:31:47.046Z",
+  "updated_at": "2026-11-25T16:12:20.459Z",
   "current": {
     "status": "operational",
     "http_status": 200,
-    "latency_ms": 988,
+    "latency_ms": 718,
     "services": {
       "web": {
         "status": "operational",
-        "latency_ms": 988
+        "latency_ms": 718
       },
       "d1": {
         "status": "operational",
-        "latency_ms": 182
+        "latency_ms": 146
       },
       "r2": {
         "status": "operational",
-        "latency_ms": 436
+        "latency_ms": 238
       }
     }
   },
@@ -35,8 +35,8 @@
     },
     "github": {
       "name": "GitHub",
-      "status": "operational",
-      "description": "All Systems Operational",
+      "status": "down",
+      "description": "Partial System Outage",
       "url": "https://www.githubstatus.com/"
     },
     "resend": {
@@ -321,6 +321,11 @@
       "checked_at": "2026-11-25T11:31:47.046Z",
       "status": "operational",
       "latency_ms": 988
+    },
+    {
+      "checked_at": "2026-11-25T16:12:20.459Z",
+      "status": "operational",
+      "latency_ms": 718
     }
   ]
 }
