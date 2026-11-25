@@ -185,6 +185,7 @@
     .banner.is-operational { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok); }
     .banner.is-degraded { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn); }
     .banner.is-down { background: var(--down-bg); border-color: var(--down-border); color: var(--down); }
+    .banner.is-offline { background: var(--unknown-bg); border-color: var(--border-hover); color: var(--text); }
     .banner-main {
       display: flex;
       align-items: center;
@@ -202,6 +203,7 @@
     .is-operational .dot { background: var(--ok); }
     .is-degraded .dot { background: var(--warn); }
     .is-down .dot { background: var(--down); }
+    .is-offline .dot { background: var(--muted); }
     .banner-meta {
       font-size: 0.8rem;
       opacity: 0.9;
@@ -271,6 +273,7 @@
     .pill.is-operational { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-border); }
     .pill.is-degraded { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-border); }
     .pill.is-down { background: var(--down-bg); color: var(--down); border-color: var(--down-border); }
+    .pill.is-offline { background: var(--unknown-bg); color: var(--muted); border-color: var(--border); }
     .guide-actions {
       margin-top: 0.85rem;
       display: flex;
@@ -420,6 +423,7 @@
       operational: '正常稼働',
       degraded: '一部遅延・障害',
       down: '障害発生中',
+      offline: '未確認',
       unknown: '未確認'
     };
 
@@ -427,6 +431,7 @@
       operational: '全システム正常稼働中',
       degraded: '一部システムで障害が発生しています',
       down: 'システムに接続できません',
+      offline: 'オフラインです（インターネット未接続）',
       unknown: '監視データ待機中'
     };
 
@@ -438,14 +443,127 @@
     }
 
     function applyStatusClass(el, status) {
-      el.classList.remove('is-operational', 'is-degraded', 'is-down');
-      if (status === 'operational' || status === 'degraded' || status === 'down') {
+      if (!el) return;
+      el.classList.remove('is-operational', 'is-degraded', 'is-down', 'is-offline');
+      if (status === 'operational' || status === 'degraded' || status === 'down' || status === 'offline') {
         el.classList.add('is-' + status);
       }
     }
 
     let latestCurrent = null;
     let latestExternal = null;
+    let hasLiveResult = false;
+    let checkSeq = 0;
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
+      const controller = new AbortController();
+      const externalSignal = options.signal;
+      if (externalSignal) {
+        if (externalSignal.aborted) {
+          controller.abort();
+        } else {
+          externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+        }
+      }
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // クライアント自身のインターネット疎通確認 (AP/DNS応答後にWANが止まっている学内ネットワークも検知)
+    async function checkClientConnectivity() {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return { online: false, staticData: null };
+      }
+
+      const sharedAbort = new AbortController();
+      const ts = Date.now();
+      let staticData = null;
+
+      const runProbe = async (url, validate) => {
+        const res = await fetchWithTimeout(url, { cache: 'no-store', signal: sharedAbort.signal }, 4000);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!validate(data)) throw new Error('Invalid probe payload');
+        return data;
+      };
+
+      const probes = [
+        runProbe(`https://dns.google/resolve?name=joken.jp&type=A&_=${ts}`, (d) => typeof d?.Status === 'number'),
+        runProbe(`https://www.githubstatus.com/api/v2/status.json?_=${ts}`, (d) => Boolean(d?.status && typeof d.status.indicator === 'string')),
+        runProbe(`./data/status.json?ping=${ts}`, (d) => {
+          const ok = Boolean(d && typeof d.current === 'object');
+          if (ok) staticData = d;
+          return ok;
+        })
+      ];
+
+      return new Promise((resolve) => {
+        let settled = false;
+        let remaining = probes.length;
+        probes.forEach((p) => {
+          p.then(() => {
+            if (!settled) {
+              settled = true;
+              sharedAbort.abort();
+              resolve({ online: true, staticData });
+            }
+          }).catch(() => {
+            remaining -= 1;
+            if (!settled && remaining === 0) {
+              settled = true;
+              resolve({ online: false, staticData: null });
+            }
+          });
+        });
+      });
+    }
+
+    function renderOffline() {
+      const checkedAt = new Date().toISOString();
+      const banner = document.getElementById('overall-banner');
+      applyStatusClass(banner, 'offline');
+      document.getElementById('overall-text').textContent = BANNER_LABELS.offline;
+      document.getElementById('overall-meta').textContent = `確認時刻: ${formatJst(checkedAt)}`;
+      document.getElementById('check-source').textContent = 'オフライン（端末側未接続）';
+
+      ['web', 'd1', 'r2'].forEach((key) => {
+        const pill = document.getElementById('pill-' + key);
+        const lat = document.getElementById('lat-' + key);
+        applyStatusClass(pill, 'offline');
+        if (pill) pill.textContent = STATUS_LABELS.offline;
+        if (lat) lat.textContent = '-';
+      });
+
+      ['cloudflare', 'google_workspace', 'github', 'resend'].forEach((key) => {
+        const pill = document.getElementById('ext-pill-' + key);
+        if (pill && pill.textContent === '確認中') {
+          applyStatusClass(pill, 'offline');
+          pill.textContent = STATUS_LABELS.offline;
+        }
+      });
+
+      const guide = document.getElementById('incident-guide');
+      const titleEl = document.getElementById('incident-guide-title');
+      const bodyEl = document.getElementById('incident-guide-body');
+      const actionsEl = document.getElementById('incident-guide-actions');
+      if (guide && titleEl && bodyEl && actionsEl) {
+        guide.style.display = 'block';
+        guide.style.borderColor = 'var(--border-hover)';
+        titleEl.textContent = 'お使いの端末がインターネットに接続されていません';
+        bodyEl.textContent = 'クライアントのインターネット接続を確認できなかったため、dash.joken.jp の稼働確認を中止しました。学内Wi-Fi（AP・DNS）に繋がっていても外部ネットワークが止まっている場合もオフライン表示になります。接続の回復後に再確認してください。';
+        actionsEl.innerHTML = '';
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'btn btn-primary';
+        retryBtn.textContent = '接続を再確認する';
+        retryBtn.addEventListener('click', runLiveCheck);
+        actionsEl.appendChild(retryBtn);
+      }
+    }
 
     function updateIncidentGuide() {
       const guide = document.getElementById('incident-guide');
@@ -588,48 +706,93 @@
       updateIncidentGuide();
     }
 
-    async function loadStaticStatus() {
+    async function loadStaticStatus(preloadedData = null, seq = checkSeq) {
       try {
-        const res = await fetch('./data/status.json?t=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('status.json fetch failed');
-        const data = await res.json();
-        renderCurrent(data.current, data.updated_at, 'GitHub Actions 監視');
+        let data = preloadedData;
+        if (!data) {
+          const res = await fetchWithTimeout('./data/status.json?t=' + Date.now(), { cache: 'no-store' }, 4500);
+          if (!res.ok) throw new Error('status.json fetch failed');
+          data = await res.json();
+        }
+        if (seq !== checkSeq) return;
+        if (!hasLiveResult && data.current) {
+          renderCurrent(data.current, data.updated_at, 'GitHub Actions 監視');
+        }
         renderExternal(data.external);
       } catch {
-        renderCurrent({ status: 'unknown' }, null, '監視データ取得エラー');
+        // 静的データの取得失敗時は上位の接続チェックでオフライン判定を行う
       }
     }
 
     async function runLiveCheck() {
+      const seq = ++checkSeq;
+      hasLiveResult = false;
       const btn = document.getElementById('live-check-btn');
       btn.disabled = true;
-      btn.textContent = '更新中…';
-      const start = performance.now();
+      btn.textContent = '接続確認中…';
+
       try {
-        const res = await fetch('https://dash.joken.jp/api/health', { cache: 'no-store' });
-        const totalMs = Math.round(performance.now() - start);
-        const data = await res.json();
-        if (data?.services?.web) {
-          data.services.web.latency_ms = totalMs;
+        const conn = await checkClientConnectivity();
+        if (seq !== checkSeq) return;
+
+        if (!conn.online) {
+          renderOffline();
+          return;
         }
-        renderCurrent(data, data.checked_at || new Date().toISOString(), 'ブラウザ直接ライブ確認');
-      } catch {
-        renderCurrent({
-          status: 'down',
-          services: {
-            web: { status: 'down', latency_ms: null },
-            d1: { status: 'unknown', latency_ms: null },
-            r2: { status: 'unknown', latency_ms: null }
+
+        if (!latestExternal) {
+          loadStaticStatus(conn.staticData, seq);
+        }
+
+        btn.textContent = '更新中…';
+        const start = performance.now();
+        try {
+          const res = await fetchWithTimeout('https://dash.joken.jp/api/health', { cache: 'no-store' }, 6000);
+          const totalMs = Math.round(performance.now() - start);
+          const data = await res.json();
+          if (seq !== checkSeq) return;
+          hasLiveResult = true;
+          if (data?.services?.web) {
+            data.services.web.latency_ms = totalMs;
           }
-        }, new Date().toISOString(), 'ブラウザ直接ライブ確認');
+          renderCurrent(data, data.checked_at || new Date().toISOString(), 'ブラウザ直接ライブ確認');
+        } catch {
+          const recheck = await checkClientConnectivity();
+          if (seq !== checkSeq) return;
+          if (!recheck.online) {
+            renderOffline();
+            return;
+          }
+          hasLiveResult = true;
+          renderCurrent({
+            status: 'down',
+            services: {
+              web: { status: 'down', latency_ms: null },
+              d1: { status: 'unknown', latency_ms: null },
+              r2: { status: 'unknown', latency_ms: null }
+            }
+          }, new Date().toISOString(), 'ブラウザ直接ライブ確認');
+        }
       } finally {
-        btn.disabled = false;
-        btn.textContent = '更新';
+        if (seq === checkSeq) {
+          btn.disabled = false;
+          btn.textContent = '更新';
+        }
       }
     }
 
     document.getElementById('live-check-btn').addEventListener('click', runLiveCheck);
-    loadStaticStatus().then(() => runLiveCheck());
+    window.addEventListener('offline', () => {
+      checkSeq += 1;
+      const btn = document.getElementById('live-check-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '更新';
+      }
+      renderOffline();
+    });
+    window.addEventListener('online', runLiveCheck);
+    runLiveCheck();
   </script>
 </body>
 </html>
