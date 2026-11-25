@@ -1,22 +1,22 @@
 {
   "target": "https://dash.joken.jp/api/health",
-  "updated_at": "2026-11-24T18:04:24.692Z",
+  "updated_at": "2026-11-25T02:21:16.474Z",
   "current": {
     "status": "operational",
     "http_status": 200,
-    "latency_ms": 1348,
+    "latency_ms": 836,
     "services": {
       "web": {
         "status": "operational",
-        "latency_ms": 1348
+        "latency_ms": 836
       },
       "d1": {
         "status": "operational",
-        "latency_ms": 136
+        "latency_ms": 312
       },
       "r2": {
         "status": "operational",
-        "latency_ms": 375
+        "latency_ms": 151
       }
     }
   },
@@ -311,6 +311,11 @@
       "checked_at": "2026-11-24T18:04:24.692Z",
       "status": "operational",
       "latency_ms": 1348
+    },
+    {
+      "checked_at": "2026-11-25T02:21:16.474Z",
+      "status": "operational",
+      "latency_ms": 836
     }
   ]
 }
